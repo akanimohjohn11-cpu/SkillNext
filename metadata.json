@@ -1,0 +1,6 @@
+{
+  "name": "SkillNest",
+  "description": "SkillNest is Nigeria's trusted marketplace connecting discerning clients in Lagos and across Nigeria with vetted, identity-verified professionals and skilled tradespeople.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

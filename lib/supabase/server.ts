@@ -1,24 +1,21 @@
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getSupabasePublicConfig } from '@/lib/supabase/config';
 
 export function isSupabaseServerConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return getSupabasePublicConfig() !== null;
 }
 
 export async function createServerSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
+  const config = getSupabasePublicConfig();
+  if (!config) {
     return null;
   }
 
   const cookieStore = await cookies();
 
-  return createServerClient(url, anonKey, {
+  return createServerClient(config.url, config.anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -33,5 +30,16 @@ export async function createServerSupabaseClient() {
         }
       },
     },
+  });
+}
+
+export function createServiceRoleSupabaseClient() {
+  const config = getSupabasePublicConfig();
+  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!config || !serviceRoleKey) {
+    return null;
+  }
+  return createSupabaseClient(config.url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 }

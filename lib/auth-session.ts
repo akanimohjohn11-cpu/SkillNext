@@ -85,6 +85,14 @@ export function verifySessionToken(token: string): SessionUser | null {
 }
 
 export async function getCurrentSessionUser(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const cookieSession = token ? verifySessionToken(token) : null;
+
+  if (cookieSession?.role === 'admin') {
+    return cookieSession;
+  }
+
   if (isSupabaseServerConfigured()) {
     try {
       const supabase = await createServerSupabaseClient();
@@ -94,12 +102,26 @@ export async function getCurrentSessionUser(): Promise<SessionUser | null> {
         } = await supabase.auth.getUser();
         if (user) {
           const meta = (user.user_metadata ?? {}) as Record<string, string>;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, role, location, is_active')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile && profile.is_active === false) {
+            return null;
+          }
+
           return {
             id: user.id,
             email: user.email ?? '',
-            fullName: meta.full_name || user.email?.split('@')[0] || 'SkillNest Member',
-            role: (meta.role as UserRole) || 'client',
-            location: meta.location || 'Lagos',
+            fullName:
+              (profile?.full_name as string) ||
+              meta.full_name ||
+              user.email?.split('@')[0] ||
+              'SkillNest Member',
+            role: ((profile?.role as UserRole) || (meta.role as UserRole) || 'client'),
+            location: (profile?.location as string) || meta.location || 'Lagos',
           };
         }
       }
@@ -108,10 +130,7 @@ export async function getCurrentSessionUser(): Promise<SessionUser | null> {
     }
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifySessionToken(token);
+  return cookieSession;
 }
 
 export function getSessionCookieConfig(token: string) {

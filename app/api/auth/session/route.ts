@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth-session';
 import { GENERATED_IMAGES } from '@/lib/constants';
 import { generateId, getStore } from '@/lib/marketplace-store';
+import { ensureSupabaseProviderProfile } from '@/lib/marketplace-data';
 import { createServerSupabaseClient, isSupabaseServerConfigured } from '@/lib/supabase/server';
 import { loginSchema, signupSchema } from '@/lib/validators';
 
@@ -86,12 +87,45 @@ export async function POST(req: NextRequest) {
           );
         }
         const meta = (authData.user.user_metadata ?? {}) as Record<string, string>;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, role, location, is_active')
+          .eq('id', authData.user.id)
+          .maybeSingle();
+
+        if (profile && profile.is_active === false) {
+          await supabase.auth.signOut();
+          return NextResponse.json(
+            { error: 'This account has been suspended' },
+            { status: 403 }
+          );
+        }
+
+        const role =
+          (profile?.role as SessionUser['role']) ||
+          (meta.role as SessionUser['role']) ||
+          'client';
+        const fullName =
+          (profile?.full_name as string) || meta.full_name || data.email.split('@')[0];
+        const location = (profile?.location as string) || meta.location || 'Lagos';
+
+        if (role === 'provider') {
+          await ensureSupabaseProviderProfile({
+            userId: authData.user.id,
+            fullName,
+            location,
+            businessName: meta.business_name,
+            categorySlug: meta.category_slug,
+            headline: meta.headline,
+          });
+        }
+
         const user: SessionUser = {
           id: authData.user.id,
           email: authData.user.email ?? data.email,
-          fullName: meta.full_name || data.email.split('@')[0],
-          role: (meta.role as SessionUser['role']) || 'client',
-          location: meta.location || 'Lagos',
+          fullName,
+          role,
+          location,
         };
         return NextResponse.json({ user });
       }
@@ -106,6 +140,9 @@ export async function POST(req: NextRequest) {
               phone: data.phone,
               role: data.role,
               location: data.location,
+              business_name: data.businessName,
+              category_slug: data.categorySlug,
+              headline: data.headline,
             },
           },
         });
@@ -116,14 +153,27 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          email: data.email,
-          full_name: data.fullName,
-          phone: data.phone,
-          role: data.role,
-          location: data.location,
-        });
+        if (authData.session) {
+          await supabase.from('profiles').upsert({
+            id: authData.user.id,
+            email: data.email.trim().toLowerCase(),
+            full_name: data.fullName.trim(),
+            phone: data.phone.trim(),
+            role: data.role,
+            location: data.location.trim(),
+          });
+
+          if (data.role === 'provider') {
+            await ensureSupabaseProviderProfile({
+              userId: authData.user.id,
+              fullName: data.fullName.trim(),
+              location: data.location.trim(),
+              businessName: data.businessName,
+              categorySlug: data.categorySlug,
+              headline: data.headline,
+            });
+          }
+        }
 
         const user: SessionUser = {
           id: authData.user.id,
@@ -132,7 +182,10 @@ export async function POST(req: NextRequest) {
           role: data.role,
           location: data.location,
         };
-        return NextResponse.json({ user, needsEmailConfirmation: !authData.session });
+        return NextResponse.json(
+          { user, needsEmailConfirmation: !authData.session },
+          { status: 201 }
+        );
       }
     }
   }

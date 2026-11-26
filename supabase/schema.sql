@@ -260,6 +260,29 @@ CREATE TRIGGER trg_recalculate_rating
   AFTER INSERT OR UPDATE OR DELETE ON public.reviews
   FOR EACH ROW EXECUTE FUNCTION public.recalculate_provider_rating();
 
+-- Automatically create a public.profiles row when a Supabase Auth user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, phone, role, location)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    NEW.raw_user_meta_data->>'phone',
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'client'),
+    COALESCE(NEW.raw_user_meta_data->>'location', 'Victoria Island, Lagos')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();
+
 -- Helper function to check admin role safely in RLS
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
@@ -285,66 +308,101 @@ ALTER TABLE public.saved_providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verification_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_submissions ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Users read public minimal info or own profile; update only own; admins manage all
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT INSERT ON public.contact_submissions TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+
+-- Profiles
+DROP POLICY IF EXISTS "Profiles readable by authenticated or public provider owners" ON public.profiles;
 CREATE POLICY "Profiles readable by authenticated or public provider owners"
   ON public.profiles FOR SELECT USING (TRUE);
+
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE USING (auth.uid() = id OR public.is_admin());
 
--- Categories: Public read; Admin write
+-- Categories
+DROP POLICY IF EXISTS "Categories are publicly readable" ON public.categories;
 CREATE POLICY "Categories are publicly readable"
   ON public.categories FOR SELECT USING (is_active = TRUE OR public.is_admin());
+
+DROP POLICY IF EXISTS "Admins manage categories" ON public.categories;
 CREATE POLICY "Admins manage categories"
   ON public.categories FOR ALL USING (public.is_admin());
 
--- Provider Profiles: Public read; Owner insert/update; Admin manage
+-- Provider Profiles
+DROP POLICY IF EXISTS "Provider profiles publicly readable" ON public.provider_profiles;
 CREATE POLICY "Provider profiles publicly readable"
   ON public.provider_profiles FOR SELECT USING (TRUE);
+
+DROP POLICY IF EXISTS "Providers insert own profile" ON public.provider_profiles;
 CREATE POLICY "Providers insert own profile"
   ON public.provider_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Providers update own profile or admin" ON public.provider_profiles;
 CREATE POLICY "Providers update own profile or admin"
   ON public.provider_profiles FOR UPDATE USING (auth.uid() = user_id OR public.is_admin());
 
--- Services & Portfolio: Public read; Provider owner manages own items
+-- Services & Portfolio
+DROP POLICY IF EXISTS "Services publicly readable" ON public.services;
 CREATE POLICY "Services publicly readable"
   ON public.services FOR SELECT USING (TRUE);
+
+DROP POLICY IF EXISTS "Providers manage own services" ON public.services;
 CREATE POLICY "Providers manage own services"
   ON public.services FOR ALL USING (
     EXISTS (SELECT 1 FROM public.provider_profiles p WHERE p.id = provider_id AND p.user_id = auth.uid())
     OR public.is_admin()
   );
 
+DROP POLICY IF EXISTS "Portfolio publicly readable" ON public.portfolio_items;
 CREATE POLICY "Portfolio publicly readable"
   ON public.portfolio_items FOR SELECT USING (TRUE);
+
+DROP POLICY IF EXISTS "Providers manage own portfolio" ON public.portfolio_items;
 CREATE POLICY "Providers manage own portfolio"
   ON public.portfolio_items FOR ALL USING (
     EXISTS (SELECT 1 FROM public.provider_profiles p WHERE p.id = provider_id AND p.user_id = auth.uid())
     OR public.is_admin()
   );
 
--- Service Requests: Clients create & manage own; Providers & Admins can view open requests
+-- Service Requests
+DROP POLICY IF EXISTS "Service requests visible to owner, verified providers, and admins" ON public.service_requests;
 CREATE POLICY "Service requests visible to owner, verified providers, and admins"
   ON public.service_requests FOR SELECT USING (
     auth.uid() = client_id
     OR public.is_admin()
     OR EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'provider')
   );
+
+DROP POLICY IF EXISTS "Clients insert own service requests" ON public.service_requests;
 CREATE POLICY "Clients insert own service requests"
   ON public.service_requests FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+DROP POLICY IF EXISTS "Clients update own service requests" ON public.service_requests;
 CREATE POLICY "Clients update own service requests"
   ON public.service_requests FOR UPDATE USING (auth.uid() = client_id OR public.is_admin());
 
--- Inquiries & Messages: Only participating client, participating provider, or admin
+-- Inquiries & Messages
+DROP POLICY IF EXISTS "Participants view own inquiries" ON public.inquiries;
 CREATE POLICY "Participants view own inquiries"
   ON public.inquiries FOR SELECT USING (
     auth.uid() = client_id
     OR EXISTS (SELECT 1 FROM public.provider_profiles p WHERE p.id = provider_id AND p.user_id = auth.uid())
     OR public.is_admin()
   );
+
+DROP POLICY IF EXISTS "Clients create inquiries" ON public.inquiries;
 CREATE POLICY "Clients create inquiries"
   ON public.inquiries FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+DROP POLICY IF EXISTS "Participants update inquiry status" ON public.inquiries;
 CREATE POLICY "Participants update inquiry status"
   ON public.inquiries FOR UPDATE USING (
     auth.uid() = client_id
@@ -352,6 +410,7 @@ CREATE POLICY "Participants update inquiry status"
     OR public.is_admin()
   );
 
+DROP POLICY IF EXISTS "Participants view inquiry messages" ON public.messages;
 CREATE POLICY "Participants view inquiry messages"
   ON public.messages FOR SELECT USING (
     EXISTS (
@@ -360,6 +419,8 @@ CREATE POLICY "Participants view inquiry messages"
       WHERE i.id = inquiry_id AND (i.client_id = auth.uid() OR p.user_id = auth.uid() OR public.is_admin())
     )
   );
+
+DROP POLICY IF EXISTS "Participants send inquiry messages" ON public.messages;
 CREATE POLICY "Participants send inquiry messages"
   ON public.messages FOR INSERT WITH CHECK (
     auth.uid() = sender_id AND EXISTS (
@@ -369,34 +430,48 @@ CREATE POLICY "Participants send inquiry messages"
     )
   );
 
--- Reviews: Publicly readable when not hidden; authenticated clients insert
+-- Reviews
+DROP POLICY IF EXISTS "Visible reviews publicly readable" ON public.reviews;
 CREATE POLICY "Visible reviews publicly readable"
   ON public.reviews FOR SELECT USING (is_hidden = FALSE OR public.is_admin());
+
+DROP POLICY IF EXISTS "Authenticated clients create reviews" ON public.reviews;
 CREATE POLICY "Authenticated clients create reviews"
   ON public.reviews FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+DROP POLICY IF EXISTS "Admins moderate reviews" ON public.reviews;
 CREATE POLICY "Admins moderate reviews"
   ON public.reviews FOR UPDATE USING (public.is_admin());
 
--- Saved Providers: Private to client
+-- Saved Providers
+DROP POLICY IF EXISTS "Clients manage saved providers" ON public.saved_providers;
 CREATE POLICY "Clients manage saved providers"
   ON public.saved_providers FOR ALL USING (auth.uid() = client_id);
 
--- Verification Submissions: Provider sees own; Admin sees & updates all
+-- Verification Submissions
+DROP POLICY IF EXISTS "Providers view own verification submissions" ON public.verification_submissions;
 CREATE POLICY "Providers view own verification submissions"
   ON public.verification_submissions FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.provider_profiles p WHERE p.id = provider_id AND p.user_id = auth.uid())
     OR public.is_admin()
   );
+
+DROP POLICY IF EXISTS "Providers submit verification" ON public.verification_submissions;
 CREATE POLICY "Providers submit verification"
   ON public.verification_submissions FOR INSERT WITH CHECK (
     EXISTS (SELECT 1 FROM public.provider_profiles p WHERE p.id = provider_id AND p.user_id = auth.uid())
   );
+
+DROP POLICY IF EXISTS "Admins review verifications" ON public.verification_submissions;
 CREATE POLICY "Admins review verifications"
   ON public.verification_submissions FOR UPDATE USING (public.is_admin());
 
--- Contact Submissions: Anyone can submit; only Admins read
+-- Contact Submissions
+DROP POLICY IF EXISTS "Anyone can submit contact inquiry" ON public.contact_submissions;
 CREATE POLICY "Anyone can submit contact inquiry"
   ON public.contact_submissions FOR INSERT WITH CHECK (TRUE);
+
+DROP POLICY IF EXISTS "Admins read contact submissions" ON public.contact_submissions;
 CREATE POLICY "Admins read contact submissions"
   ON public.contact_submissions FOR SELECT USING (public.is_admin());
 
@@ -410,10 +485,12 @@ VALUES
   ('verifications', 'verifications', FALSE)
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "Public avatar and portfolio read" ON storage.objects;
 CREATE POLICY "Public avatar and portfolio read"
   ON storage.objects FOR SELECT
   USING (bucket_id IN ('avatars', 'portfolios'));
 
+DROP POLICY IF EXISTS "Authenticated users upload own avatars and portfolios" ON storage.objects;
 CREATE POLICY "Authenticated users upload own avatars and portfolios"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -422,6 +499,7 @@ CREATE POLICY "Authenticated users upload own avatars and portfolios"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
+DROP POLICY IF EXISTS "Users delete own storage files" ON storage.objects;
 CREATE POLICY "Users delete own storage files"
   ON storage.objects FOR DELETE
   USING (

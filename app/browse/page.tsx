@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { BrowseMarketplace } from '@/components/BrowseMarketplace';
-import { getStore } from '@/lib/marketplace-store';
+import { fetchCategories, fetchProviders } from '@/lib/marketplace-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +16,10 @@ export default async function BrowsePage({
   searchParams: Promise<{ q?: string; category?: string; location?: string }>;
 }) {
   const params = await searchParams;
-  const store = getStore();
+  const [providers, categories] = await Promise.all([
+    fetchProviders(),
+    fetchCategories(),
+  ]);
 
   return (
     <div className="bg-[#F8FAFC] min-h-[80vh]">
@@ -34,8 +37,8 @@ export default async function BrowsePage({
       </section>
 
       <BrowseMarketplace
-        initialProviders={store.providers}
-        categories={store.categories.filter((c) => c.isActive)}
+        initialProviders={providers}
+        categories={categories}
         initialCategorySlug={params.category || 'all'}
         initialQuery={params.q || ''}
         initialLocation={params.location || 'All Lagos & Nigeria'}

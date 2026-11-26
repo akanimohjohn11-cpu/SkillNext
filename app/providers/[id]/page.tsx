@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getCurrentSessionUser } from '@/lib/auth-session';
-import { getStore } from '@/lib/marketplace-store';
+import { fetchProviderById, fetchSavedProviderIds } from '@/lib/marketplace-data';
 import { ProviderProfileClient } from '@/components/ProviderProfileClient';
 
 export const dynamic = 'force-dynamic';
@@ -12,8 +12,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const store = getStore();
-  const provider = store.providers.find((p) => p.id === id);
+  const provider = await fetchProviderById(id);
   if (!provider) {
     return { title: 'Provider Not Found | SkillNest' };
   }
@@ -29,15 +28,16 @@ export default async function ProviderProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const store = getStore();
-  const provider = store.providers.find((p) => p.id === id);
+  const [provider, session] = await Promise.all([
+    fetchProviderById(id),
+    getCurrentSessionUser(),
+  ]);
 
   if (!provider) {
     notFound();
   }
 
-  const session = await getCurrentSessionUser();
-  const savedIds = session ? store.savedProviders[session.id] || [] : [];
+  const savedIds = await fetchSavedProviderIds(session?.id);
   const visibleReviews = provider.reviews.filter((r) => !r.isHidden);
 
   return (

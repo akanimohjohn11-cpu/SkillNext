@@ -1,19 +1,15 @@
 import { createBrowserClient } from '@supabase/ssr';
+import { getSupabasePublicConfig } from '@/lib/supabase/config';
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return getSupabasePublicConfig() !== null;
 }
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
+  const config = getSupabasePublicConfig();
+  if (!config) {
     return null;
   }
 
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient(config.url, config.anonKey);
 }

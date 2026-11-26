@@ -1,62 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentSessionUser, isSameOriginMutation } from '@/lib/auth-session';
+import {
+  fetchCategories,
+  fetchProviders,
+  fetchSavedProviderIds,
+} from '@/lib/marketplace-data';
 import { getStore } from '@/lib/marketplace-store';
+import { isUuid } from '@/lib/supabase/config';
+import { createServerSupabaseClient, isSupabaseServerConfigured } from '@/lib/supabase/server';
 
 export async function GET(req: NextRequest) {
-  const store = getStore();
   const session = await getCurrentSessionUser();
   const { searchParams } = new URL(req.url);
 
-  const q = (searchParams.get('q') || '').trim().toLowerCase();
-  const category = (searchParams.get('category') || '').trim().toLowerCase();
-  const location = (searchParams.get('location') || '').trim().toLowerCase();
-  const minRating = Number(searchParams.get('minRating') || '0');
-  const maxPrice = Number(searchParams.get('maxPrice') || '0');
-  const verifiedOnly = searchParams.get('verified') === 'true';
-  const sort = searchParams.get('sort') || 'featured';
+  const filters = {
+    q: searchParams.get('q') || '',
+    category: searchParams.get('category') || '',
+    location: searchParams.get('location') || '',
+    minRating: Number(searchParams.get('minRating') || '0'),
+    maxPrice: Number(searchParams.get('maxPrice') || '0'),
+    verifiedOnly: searchParams.get('verified') === 'true',
+    sort: searchParams.get('sort') || 'featured',
+  };
 
-  let list = store.providers.filter((p) => {
-    if (category && category !== 'all' && p.categorySlug !== category) return false;
-    if (location && location !== 'all lagos & nigeria' && !p.location.toLowerCase().includes(location) && !p.serviceAreas.some((a) => a.toLowerCase().includes(location))) {
-      return false;
-    }
-    if (minRating > 0 && p.ratingAvg < minRating) return false;
-    if (maxPrice > 0 && p.startingPriceNgn > maxPrice) return false;
-    if (verifiedOnly && p.verificationStatus !== 'verified') return false;
-    if (q) {
-      const haystack = [
-        p.fullName,
-        p.businessName,
-        p.headline,
-        p.bio,
-        p.categoryName,
-        p.location,
-        ...p.skills,
-      ]
-        .join(' ')
-        .toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    return true;
-  });
-
-  if (sort === 'rating') {
-    list = [...list].sort((a, b) => b.ratingAvg - a.ratingAvg);
-  } else if (sort === 'price_asc') {
-    list = [...list].sort((a, b) => a.startingPriceNgn - b.startingPriceNgn);
-  } else if (sort === 'price_desc') {
-    list = [...list].sort((a, b) => b.startingPriceNgn - a.startingPriceNgn);
-  } else {
-    list = [...list].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured) || b.ratingAvg - a.ratingAvg);
-  }
-
-  const savedIds = session ? store.savedProviders[session.id] || [] : [];
+  const [providers, categories, savedProviderIds] = await Promise.all([
+    fetchProviders(filters),
+    fetchCategories(),
+    fetchSavedProviderIds(session?.id),
+  ]);
 
   return NextResponse.json({
-    providers: list,
-    categories: store.categories.filter((c) => c.isActive),
-    savedProviderIds: savedIds,
+    providers,
+    categories,
+    savedProviderIds,
   });
 }
 
@@ -79,17 +56,53 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid provider ID' }, { status: 400 });
   }
 
+  const providerId = parsed.data.providerId;
+
+  if (isSupabaseServerConfigured() && isUuid(session.id) && isUuid(providerId)) {
+    const supabase = await createServerSupabaseClient();
+    if (supabase) {
+      const { data: existing } = await supabase
+        .from('saved_providers')
+        .select('provider_id')
+        .eq('client_id', session.id)
+        .eq('provider_id', providerId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('saved_providers')
+          .delete()
+          .eq('client_id', session.id)
+          .eq('provider_id', providerId);
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        const savedProviderIds = await fetchSavedProviderIds(session.id);
+        return NextResponse.json({ saved: false, savedProviderIds });
+      } else {
+        const { error } = await supabase
+          .from('saved_providers')
+          .insert({ client_id: session.id, provider_id: providerId });
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        const savedProviderIds = await fetchSavedProviderIds(session.id);
+        return NextResponse.json({ saved: true, savedProviderIds });
+      }
+    }
+  }
+
   const store = getStore();
-  const exists = store.providers.some((p) => p.id === parsed.data.providerId);
+  const exists = store.providers.some((p) => p.id === providerId);
   if (!exists) {
     return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
   }
 
   const current = store.savedProviders[session.id] || [];
-  const isSaved = current.includes(parsed.data.providerId);
+  const isSaved = current.includes(providerId);
   const updated = isSaved
-    ? current.filter((id) => id !== parsed.data.providerId)
-    : [...current, parsed.data.providerId];
+    ? current.filter((id) => id !== providerId)
+    : [...current, providerId];
   store.savedProviders[session.id] = updated;
 
   return NextResponse.json({ saved: !isSaved, savedProviderIds: updated });

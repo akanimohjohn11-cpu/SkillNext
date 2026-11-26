@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentSessionUser, isSameOriginMutation } from '@/lib/auth-session';
+import { fetchCategories, fetchProviders } from '@/lib/marketplace-data';
 import { generateId, getStore } from '@/lib/marketplace-store';
+import { isUuid } from '@/lib/supabase/config';
+import {
+  createServerSupabaseClient,
+  createServiceRoleSupabaseClient,
+  isSupabaseServerConfigured,
+} from '@/lib/supabase/server';
+
+async function getAdminSupabaseClient() {
+  if (!isSupabaseServerConfigured()) return null;
+  return createServiceRoleSupabaseClient() || (await createServerSupabaseClient());
+}
 
 export async function GET() {
   const session = await getCurrentSessionUser();
@@ -10,6 +22,107 @@ export async function GET() {
   }
 
   const store = getStore();
+  if (isSupabaseServerConfigured()) {
+    const supabase = await getAdminSupabaseClient();
+    if (supabase) {
+      try {
+        const [
+          providers,
+          categories,
+          { data: profileRows },
+          { data: verRows },
+          { data: reqRows },
+          { count: inqCount },
+          { data: contactRows },
+        ] = await Promise.all([
+          fetchProviders(),
+          fetchCategories(true),
+          supabase
+            .from('profiles')
+            .select('id, email, full_name, phone, role, avatar_url, location, is_active, created_at')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('verification_submissions')
+            .select(`
+              id, provider_id, id_type, id_last_four, cac_number, document_url, status, reviewed_notes, submitted_at,
+              provider_profiles:provider_id ( business_name, location, profiles:user_id ( full_name ), categories:category_id ( name ) )
+            `)
+            .order('submitted_at', { ascending: false }),
+          supabase
+            .from('service_requests')
+            .select('id, title, status, location, budget_ngn, created_at')
+            .order('created_at', { ascending: false }),
+          supabase.from('inquiries').select('id', { count: 'exact', head: true }),
+          supabase
+            .from('contact_submissions')
+            .select('id, name, email, phone, topic, message, created_at')
+            .order('created_at', { ascending: false }),
+        ]);
+
+        if (Array.isArray(profileRows) && profileRows.length > 0) {
+          const users = profileRows.map((u) => ({
+            id: String(u.id),
+            email: String(u.email),
+            fullName: String(u.full_name),
+            phone: String(u.phone || ''),
+            role: u.role,
+            avatarUrl: u.avatar_url ? String(u.avatar_url) : undefined,
+            location: String(u.location || 'Lagos'),
+            isActive: Boolean(u.is_active),
+            createdAt: String(u.created_at),
+          }));
+
+          const verifications = Array.isArray(verRows)
+            ? verRows.map((v) => {
+                const rawProv = v.provider_profiles as unknown;
+                const prov = (Array.isArray(rawProv) ? rawProv[0] : rawProv) as Record<string, unknown> | null;
+                const rawOwner = prov?.profiles as unknown;
+                const owner = (Array.isArray(rawOwner) ? rawOwner[0] : rawOwner) as Record<string, unknown> | null;
+                const rawCat = prov?.categories as unknown;
+                const cat = (Array.isArray(rawCat) ? rawCat[0] : rawCat) as Record<string, unknown> | null;
+                return {
+                  id: String(v.id),
+                  providerId: String(v.provider_id),
+                  providerName: String(owner?.full_name || prov?.business_name || 'Provider'),
+                  businessName: String(prov?.business_name || 'Studio'),
+                  categoryName: String(cat?.name || 'General'),
+                  location: String(prov?.location || 'Lagos'),
+                  idType: v.id_type,
+                  idLastFour: String(v.id_last_four),
+                  cacNumber: v.cac_number ? String(v.cac_number) : undefined,
+                  portfolioSampleUrl: v.document_url ? String(v.document_url) : undefined,
+                  status: v.status,
+                  submittedAt: String(v.submitted_at),
+                  reviewedNotes: v.reviewed_notes ? String(v.reviewed_notes) : undefined,
+                };
+              })
+            : store.verifications;
+
+          const allReviews = providers.flatMap((p) =>
+            p.reviews.map((r) => ({
+              ...r,
+              providerName: p.fullName,
+              providerBusiness: p.businessName,
+            }))
+          );
+
+          return NextResponse.json({
+            users,
+            providers,
+            categories,
+            verifications,
+            reviews: allReviews,
+            requests: reqRows || store.requests,
+            inquiriesCount: typeof inqCount === 'number' ? inqCount : store.inquiries.length,
+            contacts: contactRows || store.contacts,
+          });
+        }
+      } catch {
+        // Fall through to preview store
+      }
+    }
+  }
+
   const allReviews = store.providers.flatMap((p) =>
     p.reviews.map((r) => ({
       ...r,
@@ -82,13 +195,118 @@ export async function PATCH(req: NextRequest) {
   const store = getStore();
   const data = parsed.data;
 
+  // Try Supabase admin mutation when entity IDs are UUIDs
+  if (isSupabaseServerConfigured()) {
+    const supabase = await getAdminSupabaseClient();
+    if (supabase) {
+      if (data.action === 'review_verification' && isUuid(data.verificationId)) {
+        const notes =
+          data.notes?.trim() ||
+          (data.decision === 'verified'
+            ? 'Identity & credentials verified by SkillNest Trust Team.'
+            : 'Submission requires clearer documentation.');
+
+        const { data: updatedVer, error } = await supabase
+          .from('verification_submissions')
+          .update({
+            status: data.decision,
+            reviewed_notes: notes,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', data.verificationId)
+          .select('id, provider_id')
+          .maybeSingle();
+
+        if (!error && updatedVer) {
+          await supabase
+            .from('provider_profiles')
+            .update({
+              verification_status: data.decision,
+              verification_notes: notes,
+              nin_verified: data.decision === 'verified',
+            })
+            .eq('id', updatedVer.provider_id);
+          return NextResponse.json({ ok: true, verification: updatedVer });
+        }
+      }
+
+      if (data.action === 'toggle_user_status' && isUuid(data.userId)) {
+        const { data: updatedUser, error } = await supabase
+          .from('profiles')
+          .update({ is_active: data.isActive })
+          .eq('id', data.userId)
+          .select('id, is_active')
+          .maybeSingle();
+
+        if (!error && updatedUser) {
+          return NextResponse.json({ ok: true, user: updatedUser });
+        }
+      }
+
+      if (data.action === 'create_category') {
+        const slug = data.name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        const { data: createdCat, error } = await supabase
+          .from('categories')
+          .insert({
+            name: data.name.trim(),
+            slug,
+            description: data.description.trim(),
+            icon_name: data.iconName,
+            is_featured: false,
+            is_active: true,
+          })
+          .select('id, name, slug, description, icon_name, is_active')
+          .maybeSingle();
+
+        if (!error && createdCat) {
+          return NextResponse.json({ ok: true, category: createdCat });
+        }
+      }
+
+      if (data.action === 'toggle_category' && isUuid(data.categoryId)) {
+        const { data: updatedCat, error } = await supabase
+          .from('categories')
+          .update({ is_active: data.isActive })
+          .eq('id', data.categoryId)
+          .select('id, is_active')
+          .maybeSingle();
+
+        if (!error && updatedCat) {
+          return NextResponse.json({ ok: true, category: updatedCat });
+        }
+      }
+
+      if (data.action === 'moderate_review' && isUuid(data.reviewId)) {
+        const { data: updatedRev, error } = await supabase
+          .from('reviews')
+          .update({ is_hidden: data.isHidden })
+          .eq('id', data.reviewId)
+          .select('id, is_hidden')
+          .maybeSingle();
+
+        if (!error && updatedRev) {
+          return NextResponse.json({ ok: true, review: updatedRev });
+        }
+      }
+    }
+  }
+
+  // Fallback preview store path
   if (data.action === 'review_verification') {
     const item = store.verifications.find((v) => v.id === data.verificationId);
     if (!item) {
       return NextResponse.json({ error: 'Verification record not found' }, { status: 404 });
     }
     item.status = data.decision;
-    item.reviewedNotes = data.notes?.trim() || (data.decision === 'verified' ? 'Identity & credentials verified by SkillNest Trust Team.' : 'Submission requires clearer documentation.');
+    item.reviewedNotes =
+      data.notes?.trim() ||
+      (data.decision === 'verified'
+        ? 'Identity & credentials verified by SkillNest Trust Team.'
+        : 'Submission requires clearer documentation.');
 
     const provider = store.providers.find((p) => p.id === item.providerId);
     if (provider) {

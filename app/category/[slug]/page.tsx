@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { BrowseMarketplace } from '@/components/BrowseMarketplace';
 import { CategoryIcon } from '@/components/CategoryIcon';
-import { getStore } from '@/lib/marketplace-store';
+import { fetchCategories, fetchProviders } from '@/lib/marketplace-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +14,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const store = getStore();
-  const category = store.categories.find((c) => c.slug === slug);
+  const categories = await fetchCategories();
+  const category = categories.find((c) => c.slug === slug);
   if (!category) {
     return { title: 'Category Not Found | SkillNest' };
   }
@@ -31,15 +31,15 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const store = getStore();
-  const activeCategories = store.categories.filter((c) => c.isActive);
+  const [activeCategories, categoryProviders] = await Promise.all([
+    fetchCategories(),
+    fetchProviders({ category: slug }),
+  ]);
   const category = activeCategories.find((c) => c.slug === slug);
 
   if (!category) {
     notFound();
   }
-
-  const categoryProviders = store.providers.filter((p) => p.categorySlug === slug);
 
   return (
     <div className="bg-[#F8FAFC] min-h-[80vh]">

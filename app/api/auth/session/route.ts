@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
   if (data.action === 'login') {
     const emailLower = data.email.trim().toLowerCase();
     const record = store.users.find((u) => u.user.email.toLowerCase() === emailLower);
-    if (!record || !verifyPassword(data.password, record.passwordHash)) {
+    if (!record || record.user.role === 'admin' || !verifyPassword(data.password, record.passwordHash)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
     if (!record.user.isActive) {

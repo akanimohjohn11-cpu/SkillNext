@@ -7,8 +7,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
   ChevronDown,
-  ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -303,17 +301,6 @@ export function Navbar() {
                   </Link>
                 </motion.div>
               ))}
-              <Link
-                href="/dashboard/admin"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-amber-50/70 hover:text-[#0F766E] transition-colors"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#D4A017]" aria-hidden="true" />
-                  Admin Console
-                </span>
-                <Sparkles className="w-3.5 h-3.5 text-[#D4A017]" aria-hidden="true" />
-              </Link>
             </nav>
 
             <div className="pt-3 border-t border-slate-200 flex flex-col gap-2.5">

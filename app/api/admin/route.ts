@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getCurrentSessionUser, isSameOriginMutation } from '@/lib/auth-session';
+import { isSameOriginMutation, verifyAdminConsoleToken } from '@/lib/auth-session';
 import { fetchCategories, fetchProviders } from '@/lib/marketplace-data';
 import { generateId, getStore } from '@/lib/marketplace-store';
 import { isUuid } from '@/lib/supabase/config';
@@ -15,10 +15,10 @@ async function getAdminSupabaseClient() {
   return createServiceRoleSupabaseClient() || (await createServerSupabaseClient());
 }
 
-export async function GET() {
-  const session = await getCurrentSessionUser();
+export async function GET(req: NextRequest) {
+  const session = verifyAdminConsoleToken(req);
   if (!session || session.role !== 'admin') {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    return NextResponse.json({ error: 'Admin password verification required' }, { status: 401 });
   }
 
   const store = getStore();
@@ -178,9 +178,9 @@ export async function PATCH(req: NextRequest) {
   if (!isSameOriginMutation(req)) {
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
   }
-  const session = await getCurrentSessionUser();
+  const session = verifyAdminConsoleToken(req);
   if (!session || session.role !== 'admin') {
-    return NextResponse.json({ error: 'Admin privileges required' }, { status: 403 });
+    return NextResponse.json({ error: 'Admin password verification required' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => null);

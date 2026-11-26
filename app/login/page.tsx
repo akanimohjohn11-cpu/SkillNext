@@ -195,12 +195,6 @@ function LoginFormContent() {
             Create a {roleTab === 'provider' ? 'Provider' : 'Client'} account
           </Link>
         </p>
-        <p>
-          Platform administrator?{' '}
-          <Link href="/dashboard/admin" className="font-semibold text-[#0F172A] hover:text-[#0F766E] hover:underline">
-            Open Admin Console →
-          </Link>
-        </p>
       </div>
     </div>
   );

@@ -9,7 +9,6 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { useAuth } from '@/components/AuthProvider';
 import { DashboardShell } from '@/components/DashboardShell';
 import {
   Category,
@@ -25,7 +24,6 @@ interface AdminReviewRow extends Review {
 }
 
 export default function AdminDashboardPage() {
-  const { user, loading: authLoading, refreshSession } = useAuth();
   const [activeTab, setActiveTab] = useState('verifications');
 
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -40,7 +38,8 @@ export default function AdminDashboardPage() {
   const [catDesc, setCatDesc] = useState('');
   const [adminMessage, setAdminMessage] = useState('');
 
-  // Admin passcode gate state
+  // Ephemeral in-memory admin token (never persisted in cookies, localStorage, or sessionStorage)
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   const [gateChecked, setGateChecked] = useState(false);
   const [envConfigured, setEnvConfigured] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
@@ -50,9 +49,19 @@ export default function AdminDashboardPage() {
 
   const [loaded, setLoaded] = useState(false);
 
-  const loadAdminData = useCallback(async () => {
+  const loadAdminData = useCallback(async (token: string) => {
     try {
-      const res = await fetch('/api/admin', { cache: 'no-store' });
+      const res = await fetch('/api/admin', {
+        cache: 'no-store',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.status === 401 || res.status === 403) {
+        setAdminToken(null);
+        setLoaded(false);
+        return;
+      }
       if (res.ok) {
         const d = await res.json();
         setUsers(d.users || []);
@@ -85,12 +94,23 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (authLoading || user?.role !== 'admin') return;
+    if (!adminToken) return;
     let active = true;
     (async () => {
       try {
-        const res = await fetch('/api/admin', { cache: 'no-store' });
-        if (active && res.ok) {
+        const res = await fetch('/api/admin', {
+          cache: 'no-store',
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        });
+        if (!active) return;
+        if (res.status === 401 || res.status === 403) {
+          setAdminToken(null);
+          setLoaded(false);
+          return;
+        }
+        if (res.ok) {
           const d = await res.json();
           setUsers(d.users || []);
           setProviders(d.providers || []);
@@ -106,9 +126,9 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, user]);
+  }, [adminToken]);
 
-  const loading = authLoading || !gateChecked || (user?.role === 'admin' && !loaded);
+  const loading = !gateChecked || (Boolean(adminToken) && !loaded);
 
   const handleAdminPasscodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,37 +141,45 @@ export default function AdminDashboardPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'SkillNestClient',
+          'X-Requested-With': 'SkillNextClient',
         },
         body: JSON.stringify({ action, passcode: passcodeInput }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setPasscodeError(data.error || 'Authentication failed');
+      if (!res.ok || !data.adminToken) {
+        setPasscodeError(data.error || 'Incorrect password');
       } else {
         setPasscodeInput('');
         setIsClaimed(true);
-        await refreshSession();
+        setLoaded(false);
+        setAdminToken(data.adminToken);
       }
     } catch {
-      setPasscodeError('Network error while verifying admin passcode.');
+      setPasscodeError('Network error while verifying admin password.');
     } finally {
       setPasscodeSubmitting(false);
     }
   };
 
   const runAdminAction = async (payload: Record<string, unknown>) => {
+    if (!adminToken) return;
     setAdminMessage('');
     const res = await fetch('/api/admin', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'SkillNestClient',
+        'X-Requested-With': 'SkillNextClient',
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify(payload),
     });
+    if (res.status === 401 || res.status === 403) {
+      setAdminToken(null);
+      setLoaded(false);
+      return;
+    }
     if (res.ok) {
-      await loadAdminData();
+      await loadAdminData(adminToken);
       setAdminMessage('Platform update applied.');
     }
   };
@@ -177,40 +205,43 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!adminToken) {
     const needsSetup = !envConfigured && !isClaimed;
     return (
-      <div className="bg-[#F8FAFC] min-h-[82vh] py-16 px-4 sm:px-6">
-        <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="bg-[#F8FAFC] min-h-[82vh] py-16 px-4 sm:px-6 flex items-center justify-center">
+        <div className="max-w-md w-full mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-[#0F766E]">
               SkillNext Administration
             </p>
             <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
-              {needsSetup ? 'Set Admin Passcode' : 'Admin Console Sign In'}
+              {needsSetup ? 'Set Admin Password' : 'Admin Console'}
             </h1>
             <p className="text-sm text-slate-600 leading-relaxed">
               {needsSetup
-                ? 'First-run setup: enter your chosen administrator password to lock and activate the SkillNext Admin Console.'
-                : 'Enter your administrator passcode to manage verification approvals, users, and categories.'}
+                ? 'First-run setup: enter your admin password to activate the SkillNext Admin Console.'
+                : 'Enter your admin password to access the dashboard.'}
             </p>
           </div>
 
           <form onSubmit={handleAdminPasscodeSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                {needsSetup ? 'Create Admin Password' : 'Admin Password'}
+              <label
+                htmlFor="admin-password-input"
+                className="block text-xs font-medium text-slate-700 mb-1"
+              >
+                Password
               </label>
               <input
+                id="admin-password-input"
                 type="password"
                 required
+                autoComplete="off"
                 minLength={needsSetup ? 6 : 1}
                 value={passcodeInput}
                 onChange={(e) => setPasscodeInput(e.target.value)}
-                placeholder={
-                  needsSetup ? 'Choose password (min 6 chars)' : 'Enter admin password'
-                }
-                className="w-full h-11 px-3 bg-[#F8FAFC] border border-slate-200 rounded-lg text-sm"
+                placeholder="Enter admin password"
+                className="w-full h-11 px-3 bg-[#F8FAFC] border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#0F766E]"
               />
             </div>
 
@@ -228,15 +259,10 @@ export default function AdminDashboardPage() {
               {passcodeSubmitting
                 ? 'Verifying...'
                 : needsSetup
-                  ? 'Save Password & Open Admin Console'
+                  ? 'Save Password & Unlock'
                   : 'Unlock Admin Console'}
             </button>
           </form>
-
-          <p className="text-xs text-slate-500 pt-2 border-t border-slate-100">
-            For production deployments, set <code className="font-mono">ADMIN_PASSCODE</code> in
-            Vercel / Settings → Secrets to override the first-run setup password.
-          </p>
         </div>
       </div>
     );
@@ -248,6 +274,16 @@ export default function AdminDashboardPage() {
     <DashboardShell
       title="Admin Operations Console"
       subtitle="Manage provider verification approvals, marketplace users, Nigerian categories, and review moderation."
+      workspaceLabel="Platform Administration"
+      displayName="SkillNext Admin"
+      displaySubtitle="Password-verified session"
+      signOutLabel="Lock Admin Console"
+      onSignOutOverride={() => {
+        setAdminToken(null);
+        setLoaded(false);
+        setPasscodeInput('');
+        setPasscodeError('');
+      }}
       activeTab={activeTab}
       onTabChange={setActiveTab}
       tabs={[

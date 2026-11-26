@@ -18,6 +18,11 @@ interface DashboardShellProps {
   tabs: DashboardTabItem[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  workspaceLabel?: string;
+  displayName?: string;
+  displaySubtitle?: string;
+  signOutLabel?: string;
+  onSignOutOverride?: () => void;
   children: React.ReactNode;
 }
 
@@ -27,12 +32,21 @@ export function DashboardShell({
   tabs,
   activeTab,
   onTabChange,
+  workspaceLabel,
+  displayName,
+  displaySubtitle,
+  signOutLabel,
+  onSignOutOverride,
   children,
 }: DashboardShellProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
   const handleSignOut = async () => {
+    if (onSignOutOverride) {
+      onSignOutOverride();
+      return;
+    }
     await logout();
     router.push('/');
     router.refresh();
@@ -46,16 +60,19 @@ export function DashboardShell({
           <aside className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-4 space-y-5">
             <div className="pb-4 border-b border-slate-100">
               <p className="text-xs font-medium text-[#0F766E]">
-                {user?.role === 'provider'
-                  ? 'Provider Studio'
-                  : user?.role === 'admin'
-                    ? 'Platform Administration'
-                    : 'Client Workspace'}
+                {workspaceLabel ||
+                  (user?.role === 'provider'
+                    ? 'Provider Studio'
+                    : user?.role === 'admin'
+                      ? 'Platform Administration'
+                      : 'Client Workspace')}
               </p>
               <p className="text-base font-bold text-[#0F172A] mt-0.5 truncate">
-                {user?.fullName || 'SkillNext Member'}
+                {displayName || user?.fullName || 'SkillNext Member'}
               </p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <p className="text-xs text-slate-500 truncate">
+                {displaySubtitle ?? user?.email}
+              </p>
             </div>
 
             <nav className="space-y-1" aria-label="Dashboard sections">
@@ -104,7 +121,7 @@ export function DashboardShell({
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
-                Sign Out
+                {signOutLabel || 'Sign Out'}
               </button>
             </div>
           </aside>

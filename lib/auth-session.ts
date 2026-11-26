@@ -89,10 +89,6 @@ export async function getCurrentSessionUser(): Promise<SessionUser | null> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   const cookieSession = token ? verifySessionToken(token) : null;
 
-  if (cookieSession?.role === 'admin') {
-    return cookieSession;
-  }
-
   if (isSupabaseServerConfigured()) {
     try {
       const supabase = await createServerSupabaseClient();
@@ -168,5 +164,63 @@ export function isSameOriginMutation(req: NextRequest): boolean {
     return parsedOrigin.host === host;
   } catch {
     return false;
+  }
+}
+
+export function signAdminConsoleToken(): string {
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: 'admin-console',
+      role: 'admin',
+      scope: 'admin_console',
+      exp: Date.now() + 1000 * 60 * 60 * 2,
+    })
+  ).toString('base64url');
+  const sig = crypto
+    .createHmac('sha256', getSessionSecret())
+    .update(payload)
+    .digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+export function verifyAdminConsoleToken(req: NextRequest): SessionUser | null {
+  try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.slice(7).trim();
+    const [payload, sig] = token.split('.');
+    if (!payload || !sig) return null;
+    const expectedSig = crypto
+      .createHmac('sha256', getSessionSecret())
+      .update(payload)
+      .digest('base64url');
+    const sigBuf = Buffer.from(sig);
+    const expBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      sub?: string;
+      role?: string;
+      scope?: string;
+      exp?: number;
+    };
+    if (
+      decoded.scope !== 'admin_console' ||
+      decoded.role !== 'admin' ||
+      !decoded.exp ||
+      decoded.exp < Date.now()
+    ) {
+      return null;
+    }
+    return {
+      id: 'user-admin-1',
+      email: 'admin@skillnext.ng',
+      fullName: 'SkillNext Admin',
+      role: 'admin',
+      location: 'Victoria Island, Lagos',
+    };
+  } catch {
+    return null;
   }
 }

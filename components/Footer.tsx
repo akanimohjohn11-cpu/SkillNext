@@ -1,5 +1,6 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { Compass } from 'lucide-react';
+import { GENERATED_IMAGES } from '@/lib/constants';
 
 export function Footer() {
   return (
@@ -7,13 +8,20 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
           <div className="space-y-3">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-lg bg-[#0F766E] text-white flex items-center justify-center ring-1 ring-[#D4A017]/40">
-                <Compass className="w-4 h-4 text-amber-200" aria-hidden="true" />
+            <Link href="/" className="group inline-flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-[#D4A017]/50 transition-transform duration-200 group-hover:scale-105">
+                <Image
+                  src={GENERATED_IMAGES.logo}
+                  alt="SkillNext emblem"
+                  width={32}
+                  height={32}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
               </span>
               <span className="font-display text-xl tracking-[-0.03em] flex items-baseline">
                 <span className="font-bold text-white">Skill</span>
-                <span className="font-semibold italic text-[#14B8A6] ml-[1px]">Nest</span>
+                <span className="font-semibold text-[#14B8A6] ml-[1px]">Next</span>
               </span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
@@ -61,7 +69,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/how-it-works" className="hover:text-white transition-colors">
-                  How SkillNest Works
+                  How SkillNext Works
                 </Link>
               </li>
               <li>
@@ -120,7 +128,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} SkillNest Nigeria Limited. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} SkillNext Nigeria Limited. All rights reserved.</p>
           <p>Built for verified craftsmanship in Lagos, Abuja & Port Harcourt.</p>
         </div>
       </div>

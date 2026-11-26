@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | SkillNest Nigeria',
-  description: 'Terms governing use of the SkillNest Nigerian professional marketplace.',
+  title: 'Terms of Service | SkillNext Nigeria',
+  description: 'Terms governing use of the SkillNext Nigerian professional marketplace.',
 };
 
 export default function TermsPage() {
@@ -23,7 +23,7 @@ export default function TermsPage() {
         <div className="space-y-4 text-sm text-slate-700 leading-relaxed">
           <h2 className="text-base font-bold text-[#0F172A]">1. Marketplace Role</h2>
           <p>
-            SkillNest Nigeria Limited operates a verified directory and communication
+            SkillNext Nigeria Limited operates a verified directory and communication
             platform connecting clients with independent service providers. While we
             manually screen identity documents (NIN/Passport) and corporate filings (CAC)
             before issuing Verified badges, direct contracts for services are formed
@@ -40,7 +40,7 @@ export default function TermsPage() {
           <h2 className="text-base font-bold text-[#0F172A]">3. Reviews & Moderation</h2>
           <p>
             Clients may only submit reviews reflecting genuine inquiries or completed
-            projects. SkillNest reserves the right to hide defamatory, fabricated, or
+            projects. SkillNext reserves the right to hide defamatory, fabricated, or
             abusive submissions.
           </p>
 

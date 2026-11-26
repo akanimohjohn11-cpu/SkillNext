@@ -101,8 +101,8 @@ export async function POST(req: NextRequest) {
   const adminRecord = store.users.find((u) => u.user.role === 'admin')?.user;
   const adminSession: SessionUser = {
     id: adminRecord?.id || 'user-admin-1',
-    email: adminRecord?.email || 'admin@skillnest.ng',
-    fullName: adminRecord?.fullName || 'SkillNest Admin',
+    email: adminRecord?.email || 'admin@skillnext.ng',
+    fullName: adminRecord?.fullName || 'SkillNext Admin',
     role: 'admin',
     location: adminRecord?.location || 'Victoria Island, Lagos',
   };

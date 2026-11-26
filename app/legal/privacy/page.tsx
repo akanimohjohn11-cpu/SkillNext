@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy (NDPR) | SkillNest Nigeria',
+  title: 'Privacy Policy (NDPR) | SkillNext Nigeria',
   description:
-    'SkillNest Nigeria Data Protection Regulation (NDPR) and NDPA privacy compliance policy.',
+    'SkillNext Nigeria Data Protection Regulation (NDPR) and NDPA privacy compliance policy.',
 };
 
 export default function PrivacyPage() {

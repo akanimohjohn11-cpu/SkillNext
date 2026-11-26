@@ -203,7 +203,7 @@ export async function PATCH(req: NextRequest) {
         const notes =
           data.notes?.trim() ||
           (data.decision === 'verified'
-            ? 'Identity & credentials verified by SkillNest Trust Team.'
+            ? 'Identity & credentials verified by SkillNext Trust Team.'
             : 'Submission requires clearer documentation.');
 
         const { data: updatedVer, error } = await supabase
@@ -305,7 +305,7 @@ export async function PATCH(req: NextRequest) {
     item.reviewedNotes =
       data.notes?.trim() ||
       (data.decision === 'verified'
-        ? 'Identity & credentials verified by SkillNest Trust Team.'
+        ? 'Identity & credentials verified by SkillNext Trust Team.'
         : 'Submission requires clearer documentation.');
 
     const provider = store.providers.find((p) => p.id === item.providerId);

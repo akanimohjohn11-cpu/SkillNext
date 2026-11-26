@@ -159,10 +159,15 @@ export function formatNaira(amount: number): string {
 }
 
 export const GENERATED_IMAGES = {
+  logo: '/images/skillnext_logo_mark_1795712530619.jpg',
   hero: '/images/hero_real_lagos_studio_1795613164088.jpg',
   architectPortrait: '/images/portrait_real_architect_1795613163623.jpg',
   techPortrait: '/images/portrait_real_engineer_1795613163682.jpg',
   fashionPortrait: '/images/portrait_real_designer_1795613162948.jpg',
+  lawyerPortrait: '/images/portrait_real_lawyer_1795712531313.jpg',
+  builderPortrait: '/images/portrait_real_builder_1795712531875.jpg',
   residencePortfolio: '/images/portfolio_real_ikoyi_home_1795613163408.jpg',
   solarPortfolio: '/images/portfolio_real_solar_wall_1795613163329.jpg',
+  atelierPortfolio: '/images/portfolio_real_atelier_1795712531529.jpg',
+  boardroomPortfolio: '/images/portfolio_real_boardroom_1795712531608.jpg',
 };

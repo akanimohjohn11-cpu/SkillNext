@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Trust, Legal & Provider Code of Conduct | SkillNest Nigeria',
+  title: 'Trust, Legal & Provider Code of Conduct | SkillNext Nigeria',
   description:
-    'SkillNest Nigeria legal hub, Provider Code of Conduct, NDPR Privacy Policy, and marketplace Terms of Service.',
+    'SkillNext Nigeria legal hub, Provider Code of Conduct, NDPR Privacy Policy, and marketplace Terms of Service.',
 };
 
 export default function LegalIndexPage() {
@@ -14,7 +14,7 @@ export default function LegalIndexPage() {
         <div>
           <p className="text-sm font-semibold text-[#0F766E]">Trust & Governance</p>
           <h1 className="text-3xl font-bold tracking-tight text-[#0F172A] mt-2">
-            SkillNest Legal & Code of Conduct
+            SkillNext Legal & Code of Conduct
           </h1>
           <p className="text-sm text-slate-600 mt-2">
             Governing marketplace integrity for clients and practitioners across Nigeria.
@@ -51,7 +51,7 @@ export default function LegalIndexPage() {
             Provider Code of Conduct
           </h2>
           <p className="text-sm text-slate-700 leading-relaxed">
-            Every verified practitioner on SkillNest commits to accurate portfolio
+            Every verified practitioner on SkillNext commits to accurate portfolio
             representation, written milestone pricing prior to mobilization, punctual site
             attendance across Lagos, and respectful communication. Misrepresentation of
             NIN, CAC, or client work results in immediate permanent removal.

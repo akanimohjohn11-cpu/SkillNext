@@ -17,10 +17,10 @@ export async function generateMetadata({
   const categories = await fetchCategories();
   const category = categories.find((c) => c.slug === slug);
   if (!category) {
-    return { title: 'Category Not Found | SkillNest' };
+    return { title: 'Category Not Found | SkillNext' };
   }
   return {
-    title: `${category.name} Professionals in Lagos & Nigeria | SkillNest`,
+    title: `${category.name} Professionals in Lagos & Nigeria | SkillNext`,
     description: category.description,
   };
 }

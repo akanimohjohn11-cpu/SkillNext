@@ -4,9 +4,9 @@ import { GENERATED_IMAGES } from '@/lib/constants';
 import { SmartImage } from '@/components/SmartImage';
 
 export const metadata: Metadata = {
-  title: 'About SkillNest | Raising the Standard for Services in Nigeria',
+  title: 'About SkillNext | Raising the Standard for Services in Nigeria',
   description:
-    'SkillNest was built in Victoria Island, Lagos to replace guesswork and WhatsApp hearsay with verified Nigerian craftsmanship.',
+    'SkillNext was built in Victoria Island, Lagos to replace guesswork and WhatsApp hearsay with verified Nigerian craftsmanship.',
 };
 
 export default function AboutPage() {
@@ -15,24 +15,24 @@ export default function AboutPage() {
       <section className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-6 space-y-4">
-            <p className="text-sm font-semibold text-[#0F766E]">About SkillNest</p>
+            <p className="text-sm font-semibold text-[#0F766E]">About SkillNext</p>
             <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#0F172A] text-balance">
               Replacing guesswork with verified Nigerian craftsmanship.
             </h1>
             <p className="text-base text-slate-600 leading-relaxed">
               Finding a reliable architect, solar engineer, or corporate counsel in Lagos
-              should not depend on luck or unverified group-chat referrals. SkillNest
+              should not depend on luck or unverified group-chat referrals. SkillNext
               organizes Nigeria&apos;s finest independent practitioners into a single
               trust-anchored directory.
             </p>
           </div>
-          <div className="lg:col-span-6 relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+          <div className="lg:col-span-6 group glow-card relative aspect-[16/10] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-lg">
             <SmartImage
               src={GENERATED_IMAGES.residencePortfolio}
-              alt="Modern Lagos architectural interior completed by SkillNest vetted professionals"
+              alt="Modern Lagos architectural interior completed by SkillNext vetted professionals"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             />
           </div>
         </div>

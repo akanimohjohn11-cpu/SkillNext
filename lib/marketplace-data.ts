@@ -89,7 +89,7 @@ function mapProviderRow(row: SupabaseRow): ProviderProfile {
   return {
     id: providerId,
     userId: String(row.user_id || ''),
-    fullName: String(profile?.full_name || row.business_name || 'SkillNest Pro'),
+    fullName: String(profile?.full_name || row.business_name || 'SkillNext Pro'),
     headline: String(row.headline || ''),
     businessName: String(row.business_name || ''),
     bio: String(row.bio || ''),
@@ -424,7 +424,7 @@ export function mapServiceRequestRow(row: SupabaseRow): ServiceRequest {
   return {
     id: String(row.id || ''),
     clientId: String(row.client_id || ''),
-    clientName: String(client?.full_name || 'SkillNest Client'),
+    clientName: String(client?.full_name || 'SkillNext Client'),
     title: String(row.title || ''),
     categorySlug: String(category?.slug || 'other'),
     categoryName: String(category?.name || 'Other'),

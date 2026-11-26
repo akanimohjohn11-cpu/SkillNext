@@ -184,14 +184,14 @@ export default function AdminDashboardPage() {
         <div className="max-w-md mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-[#0F766E]">
-              SkillNest Administration
+              SkillNext Administration
             </p>
             <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
               {needsSetup ? 'Set Admin Passcode' : 'Admin Console Sign In'}
             </h1>
             <p className="text-sm text-slate-600 leading-relaxed">
               {needsSetup
-                ? 'First-run setup: enter your chosen administrator password to lock and activate the SkillNest Admin Console.'
+                ? 'First-run setup: enter your chosen administrator password to lock and activate the SkillNext Admin Console.'
                 : 'Enter your administrator passcode to manage verification approvals, users, and categories.'}
             </p>
           </div>

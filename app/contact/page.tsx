@@ -62,7 +62,7 @@ export default function ContactPage() {
           <div>
             <p className="text-sm font-semibold text-[#0F766E]">Lagos Support Desk</p>
             <h1 className="text-3xl font-bold tracking-tight text-[#0F172A] mt-2">
-              Get in touch with SkillNest
+              Get in touch with SkillNext
             </h1>
             <p className="text-sm sm:text-base text-slate-600 mt-3 leading-relaxed">
               Questions about provider verification, enterprise procurement in Lagos, or
@@ -84,7 +84,7 @@ export default function ContactPage() {
               <Mail className="w-5 h-5 text-[#0F766E] shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="font-semibold text-[#0F172A]">Email Support</p>
-                <p className="text-slate-600">support@skillnest.ng</p>
+                <p className="text-slate-600">support@skillnext.ng</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

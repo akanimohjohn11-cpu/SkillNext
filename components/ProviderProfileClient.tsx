@@ -298,15 +298,19 @@ export function ProviderProfileClient({
                 <button
                   type="button"
                   onClick={() => setLightboxOpen(true)}
-                  className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 block text-left group"
+                  className="glow-card relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 hover:border-[#0F766E]/45 block text-left group"
                 >
                   <SmartImage
                     src={activePortfolio.imageUrl}
                     alt={activePortfolio.title}
                     fill
                     sizes="(max-width: 1024px) 100vw, 66vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <span className="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg bg-white/90 backdrop-blur-md text-xs font-semibold text-[#0F172A] opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-sm">
+                    Inspect Full Resolution
+                  </span>
                 </button>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                   <div>

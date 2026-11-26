@@ -940,7 +940,7 @@ export default function ProviderDashboardPage() {
 
           {provider.verificationStatus === 'verified' ? (
             <p className="text-sm text-slate-700 leading-relaxed">
-              Your SkillNest Verified badge is active across search results and your public
+              Your SkillNext Verified badge is active across search results and your public
               profile. Keep your portfolio and Naira service rates updated to convert client
               inquiries.
             </p>

@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Star,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Category, ProviderProfile } from '@/types';
 import { formatNaira, GENERATED_IMAGES, LAGOS_LOCATIONS } from '@/lib/constants';
 import { CategoryIcon } from '@/components/CategoryIcon';
@@ -25,6 +25,118 @@ interface HomeShowcaseProps {
   featuredProviders: ProviderProfile[];
 }
 
+const HERO_DISPLAY_SLIDES = [
+  {
+    id: 'slide-studio',
+    image: GENERATED_IMAGES.hero,
+    alt: 'Nigerian architects reviewing timber samples and blueprints in Victoria Island Lagos studio',
+    badge: 'NIN & CAC Verified',
+    rating: '4.9',
+    note: 'Manual ID & live studio audit completed before listing goes live.',
+    providerId: 'prov-amara-atelier',
+    providerName: 'Studio Okafor Architecture',
+    providerAvatar: GENERATED_IMAGES.architectPortrait,
+    providerMeta: 'Victoria Island · 42 completed builds',
+    metric1Label: 'Consult',
+    metric1Value: formatNaira(150000),
+    metric2Label: '3D Design',
+    metric2Value: formatNaira(350000),
+    responseTime: '< 1 hr',
+  },
+  {
+    id: 'slide-solar',
+    image: GENERATED_IMAGES.solarPortfolio,
+    alt: 'Completed 10kVA hybrid lithium solar inverter installation in Lekki Phase 1 Lagos',
+    badge: 'NEMSA & COREN Vetted',
+    rating: '4.9',
+    note: 'Commissioned hybrid power walls backed by 3-year workmanship warranty.',
+    providerId: 'prov-tunde-solar',
+    providerName: 'Balogun Solar & Power Engineering',
+    providerAvatar: GENERATED_IMAGES.techPortrait,
+    providerMeta: 'Lekki Phase 1 · 89 installations',
+    metric1Label: 'Audit',
+    metric1Value: formatNaira(45000),
+    metric2Label: '10kVA Turnkey',
+    metric2Value: formatNaira(3200000),
+    responseTime: '< 45 mins',
+  },
+  {
+    id: 'slide-atelier',
+    image: GENERATED_IMAGES.atelierPortfolio,
+    alt: 'Bespoke luxury bridal and formal tailoring atelier in Ikeja GRA Lagos',
+    badge: 'Portfolio Verified',
+    rating: '5.0',
+    note: 'Hand-beaded Aso-Oke and structured bridal tailoring with scheduled fittings.',
+    providerId: 'prov-zainab-couture',
+    providerName: 'Maison Bello Couture',
+    providerAvatar: GENERATED_IMAGES.fashionPortrait,
+    providerMeta: 'Ikeja GRA · 134 commissions',
+    metric1Label: 'Consultation',
+    metric1Value: formatNaira(35000),
+    metric2Label: 'Bespoke Suit',
+    metric2Value: formatNaira(220000),
+    responseTime: '< 2 hrs',
+  },
+];
+
+const PROJECT_GALLERY = [
+  {
+    id: 'proj-ikoyi',
+    title: 'Ikoyi Waterfront Residence Refit',
+    location: 'Ikoyi, Lagos',
+    category: 'Interior Architecture',
+    image: GENERATED_IMAGES.residencePortfolio,
+    providerName: 'Studio Okafor Architecture',
+    providerId: 'prov-amara-atelier',
+    value: formatNaira(4850000),
+    timeline: '6 weeks handover',
+  },
+  {
+    id: 'proj-solar',
+    title: '10kVA Lithium Hybrid Power Wall',
+    location: 'Lekki Phase 1, Lagos',
+    category: 'Solar & Power',
+    image: GENERATED_IMAGES.solarPortfolio,
+    providerName: 'Balogun Solar & Power',
+    providerId: 'prov-tunde-solar',
+    value: formatNaira(3200000),
+    timeline: '4 days commissioning',
+  },
+  {
+    id: 'proj-boardroom',
+    title: 'Victoria Island Executive Boardroom',
+    location: 'Victoria Island, Lagos',
+    category: 'Commercial Fit-Out',
+    image: GENERATED_IMAGES.boardroomPortfolio,
+    providerName: 'Adebayo Civil & Build',
+    providerId: 'prov-adebayo-build',
+    value: formatNaira(6400000),
+    timeline: '8 weeks build',
+  },
+  {
+    id: 'proj-atelier',
+    title: 'Custom Traditional & Bridal Atelier',
+    location: 'Ikeja GRA, Lagos',
+    category: 'Fashion & Couture',
+    image: GENERATED_IMAGES.atelierPortfolio,
+    providerName: 'Maison Bello Couture',
+    providerId: 'prov-zainab-couture',
+    value: formatNaira(450000),
+    timeline: '2 weeks tailoring',
+  },
+  {
+    id: 'proj-studio',
+    title: 'Bespoke Timber & Concept Studio',
+    location: 'Victoria Island, Lagos',
+    category: 'Architectural Design',
+    image: GENERATED_IMAGES.hero,
+    providerName: 'Studio Okafor Architecture',
+    providerId: 'prov-amara-atelier',
+    value: formatNaira(1850000),
+    timeline: '3 weeks blueprints',
+  },
+];
+
 const TESTIMONIALS = [
   {
     name: 'Oluwaseun Adeyinka',
@@ -32,7 +144,7 @@ const TESTIMONIALS = [
     location: 'Victoria Island, Lagos',
     project: 'Two-townhouse architectural & solar handover',
     quote:
-      'We needed an ARCON-registered architect and a NEMSA solar team for two Ikoyi townhouses under tight handover deadlines. Through SkillNest, both contractors delivered on schedule with transparent Naira milestones.',
+      'We needed an ARCON-registered architect and a NEMSA solar team for two Ikoyi townhouses under tight handover deadlines. Through SkillNext, both contractors delivered on schedule with transparent Naira milestones.',
   },
   {
     name: 'Chidinma Nwankwo',
@@ -40,7 +152,7 @@ const TESTIMONIALS = [
     location: 'Lekki Phase 1, Lagos',
     project: '45sqm outpatient reception refit',
     quote:
-      'Previously, sourcing reliable tradespeople in Lagos meant weeks of phone tag and unverified referrals. SkillNest let us compare verified portfolios and lock in our clinic refit within 48 hours.',
+      'Previously, sourcing reliable tradespeople in Lagos meant weeks of phone tag and unverified referrals. SkillNext let us compare verified portfolios and lock in our clinic refit within 48 hours.',
   },
   {
     name: 'Ibrahim Danjuma',
@@ -66,10 +178,14 @@ export function HomeShowcase({
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All Lagos & Nigeria');
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const categoryTrackRef = useRef<HTMLDivElement>(null);
+  const galleryTrackRef = useRef<HTMLDivElement>(null);
 
   const maxStart = Math.max(0, featuredProviders.length - 3);
+  const activeHero = HERO_DISPLAY_SLIDES[heroSlideIndex];
   const activeTestimonial = TESTIMONIALS[testimonialIndex];
 
   const handleHeroSearch = (e: React.FormEvent) => {
@@ -82,11 +198,29 @@ export function HomeShowcase({
     router.push(`/browse${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
+  const scrollHorizontal = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    direction: 'prev' | 'next'
+  ) => {
+    if (!ref.current) return;
+    const distance = Math.max(320, ref.current.clientWidth * 0.72);
+    ref.current.scrollBy({
+      left: direction === 'next' ? distance : -distance,
+      behavior: 'smooth',
+    });
+  };
+
   return (
-    <div className="bg-[#F8FAFC]">
-      {/* 1. ELEVATED HERO SECTION WITH DISPLAY OUTPUTS */}
-      <section className="border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 lg:pt-14 lg:pb-16">
+    <div className="bg-[#F8FAFC] overflow-x-clip">
+      {/* 1. ELEVATED HERO SECTION WITH GLOWING INTERACTIVE DISPLAY CAROUSEL */}
+      <section className="relative border-b border-slate-200 bg-white overflow-hidden">
+        {/* Subtle atmospheric teal/gold radial accent behind hero */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 right-0 w-[560px] h-[560px] rounded-full bg-radial from-[#0F766E]/10 via-[#D4A017]/5 to-transparent blur-3xl"
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 lg:pt-14 lg:pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
             {/* Left Copy, Search & Dual CTAs */}
             <motion.div
@@ -113,7 +247,7 @@ export function HomeShowcase({
               <div className="space-y-3">
                 <form
                   onSubmit={handleHeroSearch}
-                  className="bg-[#F8FAFC] border border-slate-200 hover:border-slate-300 focus-within:border-[#0F766E] rounded-xl p-2 flex flex-col sm:flex-row gap-2 transition-colors shadow-xs"
+                  className="bg-[#F8FAFC] border border-slate-200 hover:border-[#0F766E]/45 focus-within:border-[#0F766E] focus-within:shadow-[0_12px_30px_-14px_rgba(15,118,110,0.28)] rounded-2xl p-2 flex flex-col sm:flex-row gap-2 transition-all duration-200 shadow-xs"
                 >
                   <div className="relative flex-1">
                     <Search
@@ -126,14 +260,14 @@ export function HomeShowcase({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Try solar installer, architect, lawyer..."
                       aria-label="Search skills or services"
-                      className="w-full h-11 pl-10 pr-3 bg-white border border-slate-200 rounded-lg text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:border-[#0F766E]"
+                      className="w-full h-11 pl-10 pr-3 bg-white border border-slate-200 rounded-xl text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:border-[#0F766E]"
                     />
                   </div>
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                     aria-label="Filter by Lagos neighborhood or city"
-                    className="h-11 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-[#0F766E]"
+                    className="h-11 px-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-[#0F766E]"
                   >
                     {LAGOS_LOCATIONS.map((loc) => (
                       <option key={loc} value={loc}>
@@ -143,7 +277,7 @@ export function HomeShowcase({
                   </select>
                   <button
                     type="submit"
-                    className="h-11 px-5 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-sm font-semibold rounded-lg transition-all duration-150 hover:shadow-sm whitespace-nowrap shrink-0"
+                    className="h-11 px-5 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-[0_10px_24px_-8px_rgba(15,118,110,0.5)] whitespace-nowrap shrink-0"
                   >
                     Search Pros
                   </button>
@@ -168,7 +302,7 @@ export function HomeShowcase({
               <div className="flex flex-wrap items-center gap-4">
                 <Link
                   href="/browse"
-                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-sm font-semibold rounded-lg transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md whitespace-nowrap shrink-0"
+                  className="group inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-10px_rgba(15,118,110,0.55)] whitespace-nowrap shrink-0"
                 >
                   Find a Pro
                   <ArrowRight
@@ -178,110 +312,177 @@ export function HomeShowcase({
                 </Link>
                 <Link
                   href="/signup?role=provider"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] border border-slate-300 hover:border-[#0F172A] text-sm font-semibold rounded-lg transition-all duration-150 hover:-translate-y-0.5 whitespace-nowrap shrink-0"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] border border-slate-300 hover:border-[#0F766E] text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md whitespace-nowrap shrink-0"
                 >
                   Become a Provider
                 </Link>
               </div>
             </motion.div>
 
-            {/* Right Visual Carrier + Rich Floating Display Outputs */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.985 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="lg:col-span-6 relative min-h-[380px] lg:min-h-[480px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group"
-            >
-              <SmartImage
-                src={GENERATED_IMAGES.hero}
-                alt="Nigerian architects reviewing timber samples and blueprints in Victoria Island Lagos studio"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+            {/* Right Interactive Showcase Frame with Ambient Teal/Gold Glow */}
+            <div className="lg:col-span-6 relative">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-tr from-[#0F766E]/20 via-[#D4A017]/12 to-transparent blur-2xl opacity-75"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/15 to-slate-950/15" />
-
-              {/* Top Display Output Card: Verified Studio Output */}
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -3 }}
-                className="hidden sm:block absolute top-5 right-5 max-w-[260px] bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-xl p-3.5 shadow-lg transition-shadow hover:shadow-xl"
+                initial={{ opacity: 0, scale: 0.985 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="relative min-h-[400px] lg:min-h-[500px] h-full rounded-2xl overflow-hidden border border-slate-200/90 bg-slate-900 shadow-[0_24px_55px_-18px_rgba(15,23,42,0.35)] group"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-[#0F766E] inline-flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-[#D4A017]" aria-hidden="true" />
-                    NIN & CAC Verified
-                  </span>
-                  <span className="text-xs font-semibold text-[#0F172A] tabular-nums inline-flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-[#D4A017] fill-[#D4A017]" aria-hidden="true" />
-                    4.9
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 mt-1.5 leading-snug">
-                  Manual ID & portfolio audit completed before listing goes live.
-                </p>
-              </motion.div>
-
-              {/* Bottom Display Output Card: Live Provider Profile & Naira Quote Preview */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                whileHover={{ y: -3 }}
-                className="absolute bottom-5 left-5 right-5 sm:right-auto sm:w-[370px] bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-xl p-4 shadow-lg transition-shadow hover:shadow-xl"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                      <SmartImage
-                        src={GENERATED_IMAGES.architectPortrait}
-                        alt="Amara Okafor"
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#0F172A] truncate">
-                        Studio Okafor Architecture
-                      </p>
-                      <p className="text-xs text-slate-600 truncate">
-                        Victoria Island · 42 completed builds
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    href="/providers/prov-amara-atelier"
-                    className="p-1.5 rounded-lg bg-[#F1F5F9] hover:bg-[#0F766E] text-[#0F172A] hover:text-white transition-colors shrink-0"
-                    aria-label="Inspect Studio Okafor profile"
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeHero.id}
+                    initial={{ opacity: 0.35, scale: 1.03 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0.35 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0"
                   >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Link>
+                    <SmartImage
+                      src={activeHero.image}
+                      alt={activeHero.alt}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/20" />
+
+                {/* Top Left: Hero Showcase Carousel Controls */}
+                <div className="absolute top-5 left-5 flex items-center gap-2 z-10">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHeroSlideIndex(
+                        (i) => (i - 1 + HERO_DISPLAY_SLIDES.length) % HERO_DISPLAY_SLIDES.length
+                      )
+                    }
+                    aria-label="Previous showcase project"
+                    className="w-9 h-9 rounded-xl bg-white/90 backdrop-blur-md border border-white/60 text-[#0F172A] hover:bg-white hover:text-[#0F766E] flex items-center justify-center shadow-md transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHeroSlideIndex((i) => (i + 1) % HERO_DISPLAY_SLIDES.length)
+                    }
+                    aria-label="Next showcase project"
+                    className="w-9 h-9 rounded-xl bg-white/90 backdrop-blur-md border border-white/60 text-[#0F172A] hover:bg-white hover:text-[#0F766E] flex items-center justify-center shadow-md transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <div className="hidden sm:flex items-center gap-1.5 ml-1 px-2.5 py-1.5 rounded-xl bg-slate-950/45 backdrop-blur-md">
+                    {HERO_DISPLAY_SLIDES.map((s, idx) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setHeroSlideIndex(idx)}
+                        aria-label={`Show hero project ${idx + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-200 ${
+                          idx === heroSlideIndex
+                            ? 'w-5 bg-[#D4A017]'
+                            : 'w-1.5 bg-white/60 hover:bg-white'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-xs tabular-nums">
-                  <div>
-                    <span className="block text-[11px] text-slate-500">Consult</span>
-                    <span className="font-bold text-[#0F172A]">
-                      {formatNaira(150000)}
+                {/* Top Right Display Output Card: Verified Studio Output */}
+                <motion.div
+                  key={`top-${activeHero.id}`}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -3 }}
+                  className="hidden sm:block absolute top-5 right-5 max-w-[255px] bg-white/95 backdrop-blur-md border border-white/70 rounded-xl p-3.5 shadow-[0_14px_34px_-10px_rgba(15,23,42,0.35)] hover:shadow-[0_18px_38px_-10px_rgba(15,118,110,0.45)] transition-shadow z-10"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-[#0F766E] inline-flex items-center gap-1">
+                      <ShieldCheck className="w-4 h-4 text-[#D4A017]" aria-hidden="true" />
+                      {activeHero.badge}
+                    </span>
+                    <span className="text-xs font-semibold text-[#0F172A] tabular-nums inline-flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-[#D4A017] fill-[#D4A017]" aria-hidden="true" />
+                      {activeHero.rating}
                     </span>
                   </div>
-                  <div>
-                    <span className="block text-[11px] text-slate-500">3D Design</span>
-                    <span className="font-bold text-[#0F172A]">
-                      {formatNaira(350000)}
-                    </span>
+                  <p className="text-xs text-slate-600 mt-1.5 leading-snug">
+                    {activeHero.note}
+                  </p>
+                </motion.div>
+
+                {/* Bottom Display Output Card: Live Provider Profile & Naira Quote Preview */}
+                <motion.div
+                  key={`bottom-${activeHero.id}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -3 }}
+                  className="absolute bottom-5 left-5 right-5 sm:right-auto sm:w-[390px] bg-white/95 backdrop-blur-md border border-white/70 rounded-xl p-4 shadow-[0_20px_44px_-12px_rgba(15,23,42,0.45)] hover:shadow-[0_24px_48px_-12px_rgba(15,118,110,0.45)] transition-shadow z-10"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                        <SmartImage
+                          src={activeHero.providerAvatar}
+                          alt={activeHero.providerName}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#0F172A] truncate">
+                          {activeHero.providerName}
+                        </p>
+                        <p className="text-xs text-slate-600 truncate">
+                          {activeHero.providerMeta}
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/providers/${activeHero.providerId}`}
+                      className="p-2 rounded-lg bg-[#F1F5F9] hover:bg-[#0F766E] text-[#0F172A] hover:text-white transition-colors shrink-0"
+                      aria-label={`Inspect ${activeHero.providerName} profile`}
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
                   </div>
-                  <div>
-                    <span className="block text-[11px] text-slate-500">Response</span>
-                    <span className="font-semibold text-[#0F766E]">&lt; 1 hr</span>
+
+                  <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-xs tabular-nums">
+                    <div>
+                      <span className="block text-[11px] text-slate-500">
+                        {activeHero.metric1Label}
+                      </span>
+                      <span className="font-bold text-[#0F172A]">
+                        {activeHero.metric1Value}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-500">
+                        {activeHero.metric2Label}
+                      </span>
+                      <span className="font-bold text-[#0F172A]">
+                        {activeHero.metric2Value}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-500">Response</span>
+                      <span className="font-semibold text-[#0F766E]">
+                        {activeHero.responseTime}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            </div>
           </div>
 
           {/* 4-Column Full-Width Trust Strip */}
@@ -306,7 +507,7 @@ export function HomeShowcase({
             ].map((item) => (
               <div
                 key={item.stat}
-                className="p-3 rounded-xl border border-transparent hover:border-slate-200 hover:bg-[#F8FAFC] transition-colors"
+                className="glow-card p-3.5 rounded-xl border border-transparent hover:border-[#0F766E]/25 hover:bg-white transition-all"
               >
                 <p className="text-2xl font-bold text-[#0F172A] tabular-nums">
                   {item.stat}
@@ -318,39 +519,66 @@ export function HomeShowcase({
         </div>
       </section>
 
-      {/* 2. CATEGORIES GRID WITH HOVER ELEVATION */}
+      {/* 2. CATEGORIES HORIZONTAL CAROUSEL + SECTOR HIGHLIGHTS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
               Explore Nigerian Skill Categories
             </h2>
             <p className="text-base text-slate-600 mt-2 max-w-2xl">
               From Ikoyi residential renovations to Lekki solar installations and CAC
-              corporate filings, find the exact specialist your project requires.
+              corporate filings, glide across all 13 vetted service sectors.
             </p>
           </div>
-          <Link
-            href="/browse"
-            className="group text-sm font-semibold text-[#0F766E] hover:text-[#0D5E58] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
-          >
-            View all providers
-            <ArrowRight
-              className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </Link>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(categoryTrackRef, 'prev')}
+                aria-label="Scroll categories left"
+                className="w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-sm flex items-center justify-center transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(categoryTrackRef, 'next')}
+                aria-label="Scroll categories right"
+                className="w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-sm flex items-center justify-center transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <Link
+              href="/browse"
+              className="group text-sm font-semibold text-[#0F766E] hover:text-[#0D5E58] inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ml-1"
+            >
+              View all
+              <ArrowRight
+                className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          ref={categoryTrackRef}
+          className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-3 -mx-1 px-1"
+        >
           {categories.map((category) => (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
-              className="group bg-white border border-slate-200 hover:border-[#0F766E] rounded-xl p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between gap-4"
+              className="group glow-card snap-start shrink-0 w-[268px] sm:w-[290px] bg-white border border-slate-200/90 hover:border-[#0F766E]/55 rounded-2xl p-5 hover:-translate-y-1 flex flex-col justify-between gap-4 relative overflow-hidden"
             >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#0F766E] to-[#D4A017] opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              />
               <div className="flex items-start justify-between gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white flex items-center justify-center transition-all duration-200 group-hover:scale-105 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-[#F1F5F9] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white group-hover:shadow-[0_10px_20px_-8px_rgba(15,118,110,0.5)] flex items-center justify-center transition-all duration-200 group-hover:scale-105 shrink-0">
                   <CategoryIcon name={category.iconName} className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-medium text-slate-500 tabular-nums inline-flex items-center gap-1">
@@ -408,7 +636,7 @@ export function HomeShowcase({
                   onClick={() => setCarouselIndex((i) => Math.max(0, i - 1))}
                   disabled={carouselIndex === 0}
                   aria-label="Previous featured providers"
-                  className="w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] disabled:opacity-40 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-xl border border-slate-300 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] disabled:opacity-40 flex items-center justify-center transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -417,7 +645,7 @@ export function HomeShowcase({
                   onClick={() => setCarouselIndex((i) => Math.min(maxStart, i + 1))}
                   disabled={carouselIndex >= maxStart}
                   aria-label="Next featured providers"
-                  className="w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] disabled:opacity-40 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-xl border border-slate-300 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] disabled:opacity-40 flex items-center justify-center transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -444,12 +672,96 @@ export function HomeShowcase({
         </div>
       </section>
 
-      {/* 4. HOW IT WORKS + INTERACTIVE CLIENT OUTCOMES CAROUSEL */}
+      {/* 4. VERIFIED LAGOS PROJECT GALLERY CAROUSEL */}
+      <section className="bg-white border-b border-slate-200 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-9">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#0F766E]">
+                Live Work Showcase
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A] mt-1">
+                Verified Lagos Project Gallery
+              </h2>
+              <p className="text-base text-slate-600 mt-1.5 max-w-2xl">
+                Real photographed handovers across Ikoyi, Victoria Island, Lekki, and Ikeja
+                GRA—inspect scopes before requesting a quote.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(galleryTrackRef, 'prev')}
+                aria-label="Previous completed project"
+                className="w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-sm flex items-center justify-center transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollHorizontal(galleryTrackRef, 'next')}
+                aria-label="Next completed project"
+                className="w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-sm flex items-center justify-center transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={galleryTrackRef}
+            className="flex gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-3 -mx-1 px-1"
+          >
+            {PROJECT_GALLERY.map((item) => (
+              <Link
+                key={item.id}
+                href={`/providers/${item.providerId}`}
+                className="group glow-card snap-start shrink-0 w-[300px] sm:w-[360px] rounded-2xl overflow-hidden border border-slate-200/90 bg-white hover:-translate-y-1.5 hover:border-[#0F766E]/50"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                  <SmartImage
+                    src={item.image}
+                    alt={`${item.title} in ${item.location}`}
+                    fill
+                    sizes="(max-width: 640px) 300px, 360px"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-transparent" />
+                  <div className="absolute top-3.5 right-3.5 w-9 h-9 rounded-xl bg-white/90 backdrop-blur-md text-[#0F172A] group-hover:bg-[#0F766E] group-hover:text-white flex items-center justify-center shadow-md transition-colors">
+                    <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+                  </div>
+                  <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                    <p className="text-[11px] font-semibold text-amber-300">
+                      {item.category} · {item.location}
+                    </p>
+                    <h3 className="text-base font-bold leading-snug mt-0.5 line-clamp-1">
+                      {item.title}
+                    </h3>
+                  </div>
+                </div>
+                <div className="px-4 py-3.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#0F172A] truncate">
+                      {item.providerName}
+                    </p>
+                    <p className="text-slate-500 mt-0.5">{item.timeline}</p>
+                  </div>
+                  <span className="font-bold text-[#0F766E] tabular-nums shrink-0">
+                    {item.value}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. HOW IT WORKS + INTERACTIVE CLIENT OUTCOMES CAROUSEL */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           <div className="lg:col-span-5 space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
-              How SkillNest protects every booking
+              How SkillNext protects every booking
             </h2>
             <p className="text-base text-slate-600 leading-relaxed">
               Every step is built around accountability—verifying real identities, real
@@ -472,7 +784,7 @@ export function HomeShowcase({
               ].map((step) => (
                 <div
                   key={step.title}
-                  className="p-4 rounded-xl border border-slate-200 bg-white hover:border-[#0F766E]/50 hover:shadow-sm transition-all duration-150"
+                  className="glow-card p-4 rounded-2xl border border-slate-200 bg-white hover:border-[#0F766E]/45"
                 >
                   <h3 className="text-base font-semibold text-[#0F172A]">{step.title}</h3>
                   <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">
@@ -512,7 +824,7 @@ export function HomeShowcase({
                     )
                   }
                   aria-label="Previous testimonial"
-                  className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:border-[#0F766E] hover:text-[#0F766E] flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:border-[#0F766E] hover:text-[#0F766E] flex items-center justify-center transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -522,7 +834,7 @@ export function HomeShowcase({
                     setTestimonialIndex((i) => (i + 1) % TESTIMONIALS.length)
                   }
                   aria-label="Next testimonial"
-                  className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:border-[#0F766E] hover:text-[#0F766E] flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:border-[#0F766E] hover:text-[#0F766E] flex items-center justify-center transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -536,7 +848,7 @@ export function HomeShowcase({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-white border border-slate-200 rounded-2xl p-7 sm:p-8 space-y-5 shadow-xs"
+                className="glow-card bg-white border border-slate-200 rounded-2xl p-7 sm:p-8 space-y-5 shadow-xs"
               >
                 <p className="text-xs font-semibold text-[#0F766E]">
                   {activeTestimonial.project}
@@ -569,7 +881,7 @@ export function HomeShowcase({
                   onClick={() => setTestimonialIndex(idx)}
                   className={`p-3.5 rounded-xl border text-left transition-all duration-150 ${
                     idx === testimonialIndex
-                      ? 'bg-white border-[#0F766E] shadow-xs'
+                      ? 'bg-white border-[#0F766E] shadow-[0_10px_24px_-12px_rgba(15,118,110,0.3)]'
                       : 'bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300'
                   }`}
                 >
@@ -586,12 +898,16 @@ export function HomeShowcase({
         </div>
       </section>
 
-      {/* 5. CONVERSION BANNER */}
+      {/* 6. CONVERSION BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="bg-[#0F172A] rounded-2xl p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          <div className="max-w-2xl space-y-3">
+        <div className="relative overflow-hidden bg-[#0F172A] rounded-2xl p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.5)]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-24 -top-24 w-80 h-80 rounded-full bg-radial from-[#0F766E]/35 via-[#D4A017]/15 to-transparent blur-2xl"
+          />
+          <div className="relative max-w-2xl space-y-3">
             <p className="text-sm font-medium text-[#D4A017]">
-              Ready to get started on SkillNest?
+              Ready to get started on SkillNext?
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight text-balance">
               Book a vetted Lagos professional today, or list your craft for free.
@@ -601,16 +917,16 @@ export function HomeShowcase({
               service agreements with optional verification and featured placement.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="relative flex flex-wrap items-center gap-3 shrink-0">
             <Link
               href="/browse"
-              className="px-6 py-3 bg-[#0F766E] hover:bg-[#14B8A6] text-white text-sm font-semibold rounded-lg transition-all duration-150 hover:-translate-y-0.5 whitespace-nowrap"
+              className="px-6 py-3 bg-[#0F766E] hover:bg-[#14B8A6] text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-8px_rgba(20,184,166,0.45)] whitespace-nowrap"
             >
               Find a Pro
             </Link>
             <Link
               href="/signup?role=provider"
-              className="px-6 py-3 bg-white hover:bg-slate-100 text-[#0F172A] text-sm font-semibold rounded-lg transition-all duration-150 hover:-translate-y-0.5 whitespace-nowrap"
+              className="px-6 py-3 bg-white hover:bg-slate-100 text-[#0F172A] text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
             >
               Become a Provider
             </Link>

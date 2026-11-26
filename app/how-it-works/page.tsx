@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCheck2, MessageSquare, ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'How SkillNest Works | Vetted Nigerian Professionals',
+  title: 'How SkillNext Works | Vetted Nigerian Professionals',
   description:
-    'Learn how SkillNest verifies identities, screens portfolios, and connects clients in Lagos and Nigeria with trusted specialists.',
+    'Learn how SkillNext verifies identities, screens portfolios, and connects clients in Lagos and Nigeria with trusted specialists.',
 };
 
 export default function HowItWorksPage() {
@@ -15,7 +15,7 @@ export default function HowItWorksPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
           <p className="text-sm font-semibold text-[#0F766E]">Trust Architecture</p>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#0F172A] mt-2 text-balance">
-            How SkillNest connects craft with accountability
+            How SkillNext connects craft with accountability
           </h1>
           <p className="text-base sm:text-lg text-slate-600 mt-4 max-w-2xl leading-relaxed">
             Whether you are renovating a residence in Ikoyi, deploying commercial solar in
@@ -131,7 +131,7 @@ export default function HowItWorksPage() {
               Are you a skilled Nigerian professional?
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Build your verified SkillNest profile, showcase past builds, publish clear
+              Build your verified SkillNext profile, showcase past builds, publish clear
               Naira starting rates, and win high-intent Lagos clients.
             </p>
             <div className="flex flex-wrap gap-4 pt-2 text-xs text-slate-300">

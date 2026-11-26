@@ -24,18 +24,18 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SkillNest — Verified Nigerian Professionals & Skilled Services',
+  title: 'SkillNext — Verified Nigerian Professionals & Skilled Services',
   description:
     'Discover identity-verified architects, solar engineers, bespoke designers, legal counsel, and master tradespeople in Lagos and across Nigeria.',
   openGraph: {
-    title: 'SkillNest — Verified Nigerian Professionals & Skilled Services',
+    title: 'SkillNext — Verified Nigerian Professionals & Skilled Services',
     description:
       'Discover identity-verified architects, solar engineers, bespoke designers, legal counsel, and master tradespeople in Lagos and across Nigeria.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SkillNest — Verified Nigerian Professionals & Skilled Services',
+    title: 'SkillNext — Verified Nigerian Professionals & Skilled Services',
     description:
       'Hire vetted professionals in Lagos with transparent Naira pricing and verified portfolios.',
   },

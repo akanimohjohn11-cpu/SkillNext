@@ -119,7 +119,7 @@ export async function getCurrentSessionUser(): Promise<SessionUser | null> {
               (profile?.full_name as string) ||
               meta.full_name ||
               user.email?.split('@')[0] ||
-              'SkillNest Member',
+              'SkillNext Member',
             role: ((profile?.role as UserRole) || (meta.role as UserRole) || 'client'),
             location: (profile?.location as string) || meta.location || 'Lagos',
           };
@@ -161,7 +161,7 @@ export function isSameOriginMutation(req: NextRequest): boolean {
   const origin = req.headers.get('origin');
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
   const requestedWith = req.headers.get('x-requested-with');
-  if (requestedWith === 'SkillNestClient') return true;
+  if (requestedWith === 'SkillNextClient' || requestedWith === 'SkillNestClient') return true;
   if (!origin || !host) return true;
   try {
     const parsedOrigin = new URL(origin);

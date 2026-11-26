@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Pricing & Plans | SkillNest Nigeria',
+  title: 'Pricing & Plans | SkillNext Nigeria',
   description:
     'Free for Nigerian clients and free MVP provider onboarding, plus Pro and Studio plans for growing teams.',
 };

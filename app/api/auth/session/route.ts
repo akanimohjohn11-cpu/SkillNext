@@ -200,8 +200,8 @@ export async function POST(req: NextRequest) {
     }
     const targetEmail =
       data.role === 'client'
-        ? 'tunde.balogun@skillnest.ng'
-        : 'amara.okafor@skillnest.ng';
+        ? 'tunde.balogun@skillnext.ng'
+        : 'amara.okafor@skillnext.ng';
     const record = store.users.find((u) => u.user.email === targetEmail);
     if (!record) {
       return NextResponse.json({ error: 'Account unavailable' }, { status: 404 });

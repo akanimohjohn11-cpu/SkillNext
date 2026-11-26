@@ -13,7 +13,11 @@ interface SmartImageProps {
   height?: number;
   priority?: boolean;
   sizes?: string;
+  quality?: number;
 }
+
+const SHIMMER_BLUR_DATA_URL =
+  "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='30'%3E%3Crect width='40' height='30' fill='%23e2e8f0'/%3E%3C/svg%3E";
 
 export function SmartImage({
   src,
@@ -24,6 +28,7 @@ export function SmartImage({
   height = 600,
   priority = false,
   sizes,
+  quality = 90,
 }: SmartImageProps) {
   const [failed, setFailed] = useState(false);
 
@@ -44,7 +49,7 @@ export function SmartImage({
     );
   }
 
-  const isLocalUpload = src.startsWith('/uploads/');
+  const bypassOptimizer = src.startsWith('/uploads/') || src.startsWith('data:');
 
   if (fill) {
     return (
@@ -52,10 +57,15 @@ export function SmartImage({
         src={src}
         alt={alt}
         fill
+        quality={quality}
         sizes={sizes || '(max-width: 768px) 100vw, 50vw'}
         priority={priority}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        placeholder="blur"
+        blurDataURL={SHIMMER_BLUR_DATA_URL}
         referrerPolicy="no-referrer"
-        unoptimized={isLocalUpload}
+        unoptimized={bypassOptimizer}
         className={className}
         onError={() => setFailed(true)}
       />
@@ -68,10 +78,15 @@ export function SmartImage({
       alt={alt}
       width={width}
       height={height}
+      quality={quality}
       sizes={sizes}
       priority={priority}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      placeholder="blur"
+      blurDataURL={SHIMMER_BLUR_DATA_URL}
       referrerPolicy="no-referrer"
-      unoptimized={isLocalUpload}
+      unoptimized={bypassOptimizer}
       className={className}
       onError={() => setFailed(true)}
     />

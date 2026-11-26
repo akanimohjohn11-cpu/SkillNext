@@ -14,10 +14,10 @@ export async function generateMetadata({
   const { id } = await params;
   const provider = await fetchProviderById(id);
   if (!provider) {
-    return { title: 'Provider Not Found | SkillNest' };
+    return { title: 'Provider Not Found | SkillNext' };
   }
   return {
-    title: `${provider.businessName} — ${provider.fullName} | SkillNest`,
+    title: `${provider.businessName} — ${provider.fullName} | SkillNext`,
     description: `${provider.headline} in ${provider.location}. ${provider.bio.slice(0, 140)}`,
   };
 }

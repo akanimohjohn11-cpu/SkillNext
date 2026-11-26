@@ -60,7 +60,7 @@ function SignupFormContent() {
         setError(data.error || 'Could not create account');
       } else if (data.needsEmailConfirmation) {
         setNotice(
-          'Account created! Please check your email inbox to confirm your SkillNest address before signing in.'
+          'Account created! Please check your email inbox to confirm your SkillNext address before signing in.'
         );
       } else {
         await refreshSession();
@@ -82,7 +82,7 @@ function SignupFormContent() {
     <div className="max-w-lg w-full mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6">
       <div className="space-y-1.5">
         <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
-          Create your SkillNest account
+          Create your SkillNext account
         </h1>
         <p className="text-sm text-slate-600">
           {role === 'client'

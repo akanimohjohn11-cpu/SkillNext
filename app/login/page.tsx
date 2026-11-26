@@ -78,7 +78,7 @@ function LoginFormContent() {
     <div className="max-w-md w-full mx-auto bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6">
       <div className="space-y-1.5">
         <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
-          Sign in to SkillNest
+          Sign in to SkillNext
         </h1>
         <p className="text-sm text-slate-600">
           Access your messages, service requests, and verified provider workspace.
@@ -123,8 +123,8 @@ function LoginFormContent() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={
               roleTab === 'provider'
-                ? 'amara.okafor@skillnest.ng'
-                : 'tunde.balogun@skillnest.ng'
+                ? 'amara.okafor@skillnext.ng'
+                : 'tunde.balogun@skillnext.ng'
             }
             className="w-full h-11 px-3 bg-[#F8FAFC] border border-slate-200 rounded-lg text-sm"
           />
@@ -187,7 +187,7 @@ function LoginFormContent() {
 
       <div className="space-y-2 text-xs text-center text-slate-600">
         <p>
-          New to SkillNest?{' '}
+          New to SkillNext?{' '}
           <Link
             href={`/signup?role=${roleTab}${nextUrl ? `&next=${encodeURIComponent(nextUrl)}` : ''}`}
             className="font-semibold text-[#0F766E] hover:underline"

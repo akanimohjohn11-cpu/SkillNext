@@ -1,6 +1,6 @@
-# SkillNest — Nigerian Professional Skills & Services Marketplace
+# SkillNext — Nigerian Professional Skills & Services Marketplace
 
-SkillNest connects discerning clients in Lagos and across Nigeria with identity-verified professionals, engineers, designers, legal counsel, and skilled tradespeople.
+SkillNext connects discerning clients in Lagos and across Nigeria with identity-verified professionals, engineers, designers, legal counsel, and skilled tradespeople.
 
 ## Stack
 
@@ -21,7 +21,7 @@ ADMIN_PASSCODE=your-chosen-admin-passcode
 APP_URL=https://your-domain.vercel.app
 ```
 
-> **Preview & Local Development**: When `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are unset, SkillNest runs cleanly with its server-side signed session layer and Lagos seed directory so all Client, Provider, and Admin flows remain testable immediately. Once Supabase credentials are configured, authentication and image storage route directly through Supabase.
+> **Preview & Local Development**: When `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are unset, SkillNext runs cleanly with its server-side signed session layer and Lagos seed directory so all Client, Provider, and Admin flows remain testable immediately. Once Supabase credentials are configured, authentication and image storage route directly through Supabase.
 
 ## Supabase Setup
 

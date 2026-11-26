@@ -53,7 +53,7 @@ export function DashboardShell({
                     : 'Client Workspace'}
               </p>
               <p className="text-base font-bold text-[#0F172A] mt-0.5 truncate">
-                {user?.fullName || 'SkillNest Member'}
+                {user?.fullName || 'SkillNext Member'}
               </p>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>
